@@ -9,6 +9,12 @@
 #
 # Normal rules (sorted alphabetically)
 #
+# Udit's Stuff
+/clang
+/build.sh
+/out
+/error.log
+#
 .*
 *.a
 *.bin

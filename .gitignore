@@ -17,7 +17,7 @@
 #
 .*
 *.a
-*.bin
+#*.bin
 *.bz2
 *.c.[012]*.*
 *.dtb
@@ -26,7 +26,7 @@
 *.elf
 *.gcno
 *.gz
-*.i
+#*.i
 *.ko
 *.ll
 *.lst
@@ -139,3 +139,7 @@ Android.bp
 
 # Object directory
 out/
+
+#rokuSENPAI's ignore list
+error.log
+build_error.log

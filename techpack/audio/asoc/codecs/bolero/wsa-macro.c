@@ -1,4 +1,5 @@
 /* Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -2124,6 +2125,10 @@ static int wsa_macro_rx_mux_put(struct snd_kcontrol *kcontrol,
 	wsa_priv->rx_port_value[widget->shift] = rx_port_value;
 
 	bit_input = widget->shift;
+
+	dev_dbg(wsa_dev,
+		"%s: mux input: %d, mux output: %d, bit: %d\n",
+		__func__, rx_port_value, widget->shift, bit_input);
 
 	dev_dbg(wsa_dev,
 		"%s: mux input: %d, mux output: %d, bit: %d\n",

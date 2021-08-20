@@ -1,4 +1,5 @@
 /* Copyright (c) 2016-2020, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2021 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -726,6 +727,11 @@ static int __cam_req_mgr_check_sync_for_mslave(
 		? link->sof_timestamp - sync_link->sof_timestamp
 		: sync_link->sof_timestamp - link->sof_timestamp;
 
+	sof_timestamp_delta =
+		link->sof_timestamp >= sync_link->sof_timestamp
+		? link->sof_timestamp - sync_link->sof_timestamp
+		: sync_link->sof_timestamp - link->sof_timestamp;
+
 	CAM_DBG(CAM_CRM,
 		"link_hdl %x req %lld frame_skip_flag %d open_req_cnt:%d initial_sync_req [%lld,%lld] is_master:%d",
 		link->link_hdl, req_id, link->sync_link_sof_skip,
@@ -1335,10 +1341,11 @@ static int __cam_req_mgr_process_req(struct cam_req_mgr_core_link *link,
 			reset_step = link->max_delay;
 			if (link->sync_link) {
 				if ((link->in_msync_mode) &&
-					(link->sync_link->is_master))
+					(link->sync_link->is_master)) 
 					reset_step =
-						link->sync_link->max_delay;
-			}
+						link->sync_link->max_delay; 
+						}
+			
 
 			/* This is to handle a rare scenario of scheduling
 			 * issue. If ISP sends multiple sofs due to scheduling
@@ -1353,7 +1360,7 @@ static int __cam_req_mgr_process_req(struct cam_req_mgr_core_link *link,
 				last_app_idx = in_q->last_applied_idx;
 				in_q->last_applied_idx = idx;
 			}
-
+                         reset_step += 2;
 			__cam_req_mgr_dec_idx(
 				&idx, reset_step + 1,
 				in_q->num_slots);
@@ -3394,7 +3401,8 @@ int cam_req_mgr_sync_config(
 
 	link1->is_master = false;
 	link2->is_master = false;
-
+	link1->initial_skip = false;
+	link2->initial_skip = false;
 	link1->in_msync_mode = false;
 	link2->in_msync_mode = false;
 	link1->initial_sync_req = -1;

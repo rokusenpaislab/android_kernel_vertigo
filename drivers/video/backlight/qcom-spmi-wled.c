@@ -1,4 +1,5 @@
 /* Copyright (c) 2015, Sony Mobile Communications, AB.
+ * Copyright (C) 2021 XiaoMi, Inc.
  *
  * Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
  *
@@ -426,11 +427,18 @@ static int wled5_sample_hold_control(struct wled *wled, u16 brightness,
 	return rc;
 }
 
+#define  WLED_CABC_THR	200
 static int wled5_set_brightness(struct wled *wled, u16 brightness)
 {
 	int rc, offset;
 	u16 low_limit = wled->max_brightness * 1 / 1000;
 	u8 val, v[2], brightness_msb_mask;
+
+//        pr_err("xinj: %s: %d brightness =%d\n", __func__, __LINE__,brightness);
+	if (brightness < WLED_CABC_THR)
+	        wled->cabc_config(wled,false);
+	else
+	        wled->cabc_config(wled,true);
 
 	/* WLED5's lower limit is 0.1% */
 	if (brightness > 0 && brightness < low_limit)
@@ -2107,6 +2115,9 @@ static int wled_flash_setup(struct wled *wled)
 			wled->num_strings++;
 		}
 	}
+// add start by zhongjiaqian for wled current_limit 2018-11-19
+        wled_flash_set_fsc(wled, wled->brightness, wled->cfg.fs_current);
+// add start by zhongjiaqian for wled current_limit 2018-11-19
 
 	/* Enable current sinks for flash */
 	rc = regmap_update_bits(wled->regmap,

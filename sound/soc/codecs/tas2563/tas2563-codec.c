@@ -55,7 +55,7 @@
 #define	PPC_DRIVER_MTPLLSRC			0x00000400
 #define	PPC_DRIVER_CFGDEV_NONCRC	0x00000101
 
-#define TAS2563_CAL_NAME    "/mnt/vendor/persist/audio/tas2563_cal.bin"
+#define TAS2563_CAL_NAME     "/vendor/firmware/tas2563_cal.bin"
 #define RESTART_MAX 3
 
 #define TAS2563_UDELAY 0xFFFFFFFE

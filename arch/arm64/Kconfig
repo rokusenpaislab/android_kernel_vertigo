@@ -309,6 +309,13 @@ config QTI_GVM_QUIN
 		This should work on 64bit machines.
 		If you don't know what to do here, say N.
 
+config BOOT_INFO
+        bool "Boot information from bootloader"
+        default y
+        help
+          On embedded linux device, we try to collect more information from
+          bootloader to kernel. eg. powerup reason.
+
 source "init/Kconfig"
 
 source "kernel/Kconfig.freezer"

@@ -67,7 +67,7 @@ static void scm_disable_sdi(void);
  * So the SDI cannot be re-enabled when it already by-passed.
  */
 
-int download_mode = 1;
+int download_mode = 0;
 static bool force_warm_reboot;
 
 #ifdef CONFIG_QCOM_DLOAD_MODE

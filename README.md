@@ -1,22 +1,19 @@
 # Vertigo Kernel - Redmi Note 7 pro (Violet)
 
-![banner](https://downloads.rokusenpai.ml/0:/Frame%2028%20(2).png)
+![banner](https://camo.githubusercontent.com/0bda374e8d2b9826fc2accbbf12fae621d61adbd45b8e910cf85f721a5171130/68747470733a2f2f692e696d6775722e636f6d2f71556f4c67646c2e6a7067)
 
-### Current Version : ``` v2.0-Manjushage ```
+### Current Version : ``` v2.3-おっぱい ```
 
 ### Download Link :
  
- [Manjushage](https://github.com/rokusenpaislab/android_kernel_vertigo/releases/tag/v2.0-Manjushage)
+ [おっぱい](https://github.com/rokusenpaislab/android_kernel_vertigo/releases/tag/v2.3-%E3%81%8A%E3%81%A3%E3%81%B1%E3%81%84)
 
 ### Changelog :
 
- * initial build based on violet-q-oss
- * enabled Sultan's simple low memory killer.
- * merged caf tag LA.UM.9.1.r1-10900.02-SMxxx0.QSSI12.0
- * enabled compact vDSO
- * enabled exFAT support
+ * merged caf tag LA.UM.9.1.r1-11200.01-SMxxx0.QSSI12.0
+ * enable dev freq boosting
 
-### Support Android Version  : ``` R ```
+### Support Android Version  : ``` R ``` & ``` S ```
 
 ### Telegram releases channel:
 

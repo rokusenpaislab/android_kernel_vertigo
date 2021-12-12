@@ -709,6 +709,16 @@ else ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS += -Os
 endif
 
+ifdef CONFIG_LLVM_POLLY
+KBUILD_CFLAGS	+=  -mllvm -polly \
+					-mllvm -polly-run-inliner \
+					-mllvm -polly-opt-fusion=max \
+					-mllvm -polly-ast-use-context \
+					-mllvm -polly-detect-keep-going \
+					-mllvm -polly-vectorizer=stripmine \
+					-mllvm -polly-invariant-load-hoisting
+endif
+
 # Tell compiler to tune the performance of the code for a specified
 # target processor
 ifeq ($(cc-name),gcc)

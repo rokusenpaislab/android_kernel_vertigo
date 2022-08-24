@@ -1,0 +1,84 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Kernel Compiling CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cloning
+        run: |
+          git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1  GCC --depth=1
+          git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git -b lineage-19.1  GCC32 --depth=1
+          git clone https://github.com/rokusenpaislab/anykernel.git AK_DIR  --depth=1
+          git clone https://github.com/Nicklas373/aosp-clang.git -b r412851  CLANG_DIR  --depth=1
+          git clone https://android.googlesource.com/platform/system/libufdt scripts/ufdt/libufdt --depth=1
+
+      - name: Compiling
+        run: |
+          DIR="${PWD}"
+          ARCH="arm64"
+          SUBARCH="arm64"
+          export ARCH SUBARCH
+          export CROSS_COMPILE=$DIR/GCC/bin/aarch64-linux-android-
+          export CROSS_COMPILE_ARM32=$DIR/GCC32/bin/arm-linux-androideabi-
+          export KBUILD_BUILD_USER=user
+          export KBUILD_BUILD_HOST=user
+          PATH=$DIR/CLANG_DIR/bin:$DIR/GCC32/bin:$DIR/GCC/bin:${PATH}
+          KERNEL_IMG=$DIR/out/arch/$ARCH/boot/Image.gz-dtb
+          KERNEL_DTBO=$DIR/out/arch/$ARCH/boot/dtbo.img
+          [[ ! -d out ]] && mkdir out
+          [[ -f "$KERNEL_IMG" ]] && rm "$KERNEL_IMG"
+          find . -name "*.dtb" -type f -delete
+
+          COMMIT=$(git log --pretty=format:"%s" -1)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          KERNEL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          Repo=$(git config --get remote.origin.url)
+          CAPTION=$(echo -e \
+          "
+          Repository: $Repo
+          Branch: $KERNEL_BRANCH
+          HEAD: $COMMIT_SHA: $COMMIT 
+          ")
+          curl -s "https://api.telegram.org/bot${{secrets.BOT_TOKEN}}/sendMessage" \
+              -F parse_mode=html \
+              -F disable_web_page_preview=true \
+              -F text=" <b> Kernel Compiling Started !! </b> $CAPTION " \
+              -F chat_id=${{secrets.TG_CHAT}} &> /dev/null
+          make O=out vendor/violet-perf_defconfig -j$(nproc --all)
+          BUILD_START=$(date +"%s")
+          make -j$(nproc --all) O=out \
+                      CROSS_COMPILE=$CROSS_COMPILE \
+                      CROSS_COMPILE_COMPACT=$CROSS_COMPILE_ARM32 \
+                      CC=$DIR/CLANG_DIR/bin/clang \
+                      CLANG_TRIPLE=aarch64-linux-gnu- Image.gz-dtb 2>&1  |& tee error.log
+          BUILD_END=$(date +"%s")
+          DIFF=$((BUILD_END - BUILD_START))
+          if ! [ -a "$KERNEL_IMG" ]; then
+            echo -e "\n> Build failed"
+            curl -F document=@"error.log"  "https://api.telegram.org/bot${{secrets.BOT_TOKEN}}/sendDocument" \
+            -F caption=" <b> Kernel Compiling Failed !! </b> \n Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code>" \
+            -F chat_id=${{secrets.TG_CHAT}} \
+            -F parse_mode=html &> /dev/null
+            exit 1
+          fi
+          python2 $DIR/scripts/ufdt/libufdt/utils/src/mkdtboimg.py  create $DIR/out/arch/arm64/boot/dtbo.img --page_size=4096 $DIR/out/arch/arm64/boot/dts/qcom/sm6150-idp-overlay.dtbo
+          echo -e "\n> Build successful! generating flashable zip..."
+          cd $DIR/AK_DIR || echo -e "\nAnykernel directory does not exist" || exit 1
+          git clean -fd
+          mv "$KERNEL_IMG" $DIR/AK_DIR/Image.gz-dtb
+          mv "$KERNEL_DTBO" $DIR/AK_DIR/dtbo.img
+          ZIP_NAME=Vertigo-V2.0-stable-$(date +%Y-%m-%d_%H%M).zip
+          zip -r9 "$ZIP_NAME" ./* -x .git README.md ./*placeholder
+          echo -e "\n> ZIP DONE.\n> File: $ZIP_NAME"
+          curl -F document=@"$ZIP_NAME"  "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendDocument" \
+            -F caption=" <b> Kernel Compiling Successful !!  \n </b>  Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code>" \
+            -F chat_id=${{secrets.TG_CHAT}} \
+            -F parse_mode=html &> /dev/null

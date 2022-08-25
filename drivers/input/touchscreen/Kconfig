@@ -1314,6 +1314,4 @@ config TOUCHSCREEN_RAYDIUM_CHIPSET
 	  
 source "drivers/input/touchscreen/xiaomi/Kconfig"
 
-source "drivers/input/touchscreen/focaltech_touch/Kconfig"
-
 endif

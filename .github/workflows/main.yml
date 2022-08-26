@@ -41,16 +41,15 @@ jobs:
           COMMIT_SHA=$(git rev-parse --short HEAD)
           KERNEL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
           Repo=$(git config --get remote.origin.url)
-          CAPTION=$(echo -e \
-          "
-          Repository: $Repo
-          Branch: $KERNEL_BRANCH
-          HEAD: $COMMIT_SHA: $COMMIT 
-          ")
           curl -s "https://api.telegram.org/bot${{secrets.BOT_TOKEN}}/sendMessage" \
-              -F parse_mode=html \
+              -F parse_mode=markdown \
               -F disable_web_page_preview=true \
-              -F text=" <b> Kernel Compiling Started !! </b> $CAPTION " \
+              -F text="
+              *Kernel Compiling Started !!*
+              Repository: [Click Me]($Repo)
+              Branch: $KERNEL_BRANCH
+              HEAD: $COMMIT_SHA: $COMMIT
+              " \
               -F chat_id=${{secrets.TG_CHAT}} &> /dev/null
           make O=out vendor/violet-perf_defconfig -j$(nproc --all)
           BUILD_START=$(date +"%s")
@@ -64,9 +63,12 @@ jobs:
           if ! [ -a "$KERNEL_IMG" ]; then
             echo -e "\n> Build failed"
             curl -F document=@"error.log"  "https://api.telegram.org/bot${{secrets.BOT_TOKEN}}/sendDocument" \
-            -F caption=" <b> Kernel Compiling Failed !! </b> \n Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code>" \
+            -F caption="
+            *Kernel Compiling Failed !!*
+            Time Taken: $((DIFF / 60))m $((DIFF % 60))s
+            " \
             -F chat_id=${{secrets.TG_CHAT}} \
-            -F parse_mode=html &> /dev/null
+            -F parse_mode=markdown &> /dev/null
             exit 1
           fi
           python2 $DIR/scripts/ufdt/libufdt/utils/src/mkdtboimg.py  create $DIR/out/arch/arm64/boot/dtbo.img --page_size=4096 $DIR/out/arch/arm64/boot/dts/qcom/sm6150-idp-overlay.dtbo
@@ -79,6 +81,9 @@ jobs:
           zip -r9 "$ZIP_NAME" ./* -x .git README.md ./*placeholder
           echo -e "\n> ZIP DONE.\n> File: $ZIP_NAME"
           curl -F document=@"$ZIP_NAME"  "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendDocument" \
-            -F caption=" <b> Kernel Compiling Successful !!  \n </b>  Time taken: <code>$((DIFF / 60))m $((DIFF % 60))s</code>" \
+            -F caption="
+            *Kernel Compiling Successful !!*
+            Time Taken: $((DIFF / 60))m $((DIFF % 60))s
+            " \
             -F chat_id=${{secrets.TG_CHAT}} \
-            -F parse_mode=html &> /dev/null
+            -F parse_mode=markdown &> /dev/null

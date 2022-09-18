@@ -68,7 +68,7 @@ static void scm_disable_sdi(void);
  */
 
 int download_mode = 0;
-static bool force_warm_reboot;
+static bool force_warm_reboot = true;
 
 static int in_panic;
 
@@ -715,8 +715,8 @@ skip_sysfs_create:
 	if (!download_mode)
 		scm_disable_sdi();
 
-	force_warm_reboot = of_property_read_bool(dev->of_node,
-						"qcom,force-warm-reboot");
+	/*force_warm_reboot = of_property_read_bool(dev->of_node,
+						"qcom,force-warm-reboot");*/
 
 	return 0;
 

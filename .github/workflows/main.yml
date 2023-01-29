@@ -1,11 +1,9 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Kernel Compiling CI
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "tm" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "tm" ]
   workflow_dispatch:
 jobs:
   build:
@@ -33,26 +31,25 @@ jobs:
           PATH=$DIR/CLANG_DIR/bin:$DIR/GCC32/bin:$DIR/GCC/bin:${PATH}
           KERNEL_IMG=$DIR/out/arch/$ARCH/boot/Image.gz-dtb
           KERNEL_DTBO=$DIR/out/arch/$ARCH/boot/dtbo.img
+          DEVICE="violet"
           [[ ! -d out ]] && mkdir out
           [[ -f "$KERNEL_IMG" ]] && rm "$KERNEL_IMG"
           find . -name "*.dtb" -type f -delete
-
           COMMIT=$(git log --pretty=format:"%s" -1)
           COMMIT_SHA=$(git rev-parse --short HEAD)
           KERNEL_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          Repo=$(git config --get remote.origin.url)
           curl -s "https://api.telegram.org/bot${{secrets.BOT_TOKEN}}/sendMessage" \
               -F parse_mode=markdown \
               -F disable_web_page_preview=true \
               -F text="
               *Kernel Compiling Started !!*
-              Repository: [Click Me]($Repo)
+              Device: $DEVICE
               Branch: $KERNEL_BRANCH
               HEAD: $COMMIT_SHA: $COMMIT
               " \
               -F chat_id=${{secrets.TG_CHAT}} &> /dev/null
-          make O=out vendor/violet-perf_defconfig -j$(nproc --all)
           BUILD_START=$(date +"%s")
+          make O=out vendor/violet-perf_defconfig -j$(nproc --all)
           make -j$(nproc --all) O=out \
                       CROSS_COMPILE=$CROSS_COMPILE \
                       CROSS_COMPILE_COMPACT=$CROSS_COMPILE_ARM32 \
@@ -70,14 +67,14 @@ jobs:
             -F chat_id=${{secrets.TG_CHAT}} \
             -F parse_mode=markdown &> /dev/null
             exit 1
-          fi
-          python2 $DIR/scripts/ufdt/libufdt/utils/src/mkdtboimg.py  create $DIR/out/arch/arm64/boot/dtbo.img --page_size=4096 $DIR/out/arch/arm64/boot/dts/qcom/sm6150-idp-overlay.dtbo
+          fi 
+          python3 $DIR/scripts/ufdt/libufdt/utils/src/mkdtboimg.py  create $DIR/out/arch/arm64/boot/dtbo.img --page_size=4096 $DIR/out/arch/arm64/boot/dts/qcom/sm6150-idp-overlay.dtbo
           echo -e "\n> Build successful! generating flashable zip..."
           cd $DIR/AK_DIR || echo -e "\nAnykernel directory does not exist" || exit 1
           git clean -fd
           mv "$KERNEL_IMG" $DIR/AK_DIR/Image.gz-dtb
           mv "$KERNEL_DTBO" $DIR/AK_DIR/dtbo.img
-          ZIP_NAME=Vertigo-V2.0-stable-$(date +%Y-%m-%d_%H%M).zip
+          ZIP_NAME=Vertigo-v2.0stable-$DEVICE-$(date +%Y-%m-%d_%H%M).zip
           zip -r9 "$ZIP_NAME" ./* -x .git README.md ./*placeholder
           echo -e "\n> ZIP DONE.\n> File: $ZIP_NAME"
           curl -F document=@"$ZIP_NAME"  "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendDocument" \
@@ -87,3 +84,4 @@ jobs:
             " \
             -F chat_id=${{secrets.TG_CHAT}} \
             -F parse_mode=markdown &> /dev/null
+
